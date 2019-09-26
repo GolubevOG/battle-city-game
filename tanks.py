@@ -30,6 +30,7 @@ class Tank(pygame.sprite.Sprite):
                 frame_location = (self.rect.w * i, self.rect.h * j)
                 self.frames.append(sheet.subsurface(pygame.Rect(
                     frame_location, self.rect.size)))
+        # divides the sheet into several rows and columns
 
     def update(self):
         if self.go:
@@ -37,6 +38,7 @@ class Tank(pygame.sprite.Sprite):
             self.rect.y += self.ym
             self.cur_frame = (self.cur_frame + 1) % len(self.frames)
             self.image = self.frames[self.cur_frame]
+            # moves, changes image
 
     def direction(self, key):
         x, y = self.rect.x, self.rect.y
@@ -44,6 +46,7 @@ class Tank(pygame.sprite.Sprite):
             pygame.image.load("data/{}_tank_{}_level{}.png".format(self.color, key, self.level)),
             (64, 30))
         self.cut_sheet(img, 2, 1)
+        # takes two frames from the image
         self.cur_frame = 0
         self.image = self.frames[self.cur_frame]
         self.rect = self.rect.move(x, y)
@@ -104,7 +107,7 @@ class Tank(pygame.sprite.Sprite):
             self.rect.x = 188 + 16
 
 
-class Bullet(pygame.sprite.Sprite):
+class Bullet(pygame.sprite.Sprite):  # a bullet
     def __init__(self, d, x, y, group, group2):
         super().__init__(all_sprites)
         self.add(group)
@@ -127,6 +130,7 @@ class Bullet(pygame.sprite.Sprite):
             x -= 6
         self.rect.x += x
         self.rect.y += y
+        # the bullet flies in needed direction
 
     def update(self):
         self.move()
@@ -152,7 +156,7 @@ class Gift(pygame.sprite.Sprite):
         pass
 
 
-class Border(pygame.sprite.Sprite):
+class Border(pygame.sprite.Sprite):  # impassable wall
     def __init__(self, x1, y1, x2, y2):
         super().__init__(borders)
         self.image = pygame.transform.scale(pygame.image.load("data/border.png"), (x2, y2))
@@ -161,7 +165,7 @@ class Border(pygame.sprite.Sprite):
         self.rect.y = y1
 
 
-class Stage(pygame.sprite.Sprite):
+class Stage(pygame.sprite.Sprite):  # flying up text
     def __init__(self, group, x, y, img, a, b):
         super().__init__(group)
         self.image = pygame.transform.scale(pygame.image.load("data/{}.png".format(img)), (a, b))
@@ -171,12 +175,12 @@ class Stage(pygame.sprite.Sprite):
 
     def render(self):
         global k1
-        self.rect.y -= 2
+        self.rect.y -= 2  # text moves up while y > 250
         if self.rect.y <= 250:
             k1 = False
 
 
-class Wall(pygame.sprite.Sprite):
+class Wall(pygame.sprite.Sprite):  # destroyable wall
     def __init__(self, group, x, y, img):
         super().__init__(all_sprites)
         self.add(group)
@@ -191,7 +195,7 @@ class Wall(pygame.sprite.Sprite):
         self.rect.y = 16 * y + 60
 
 
-class Game(pygame.sprite.Sprite):
+class Game(pygame.sprite.Sprite):  # text flying down
     def __init__(self, group, img):
         super().__init__(group)
         self.image = pygame.transform.scale(pygame.image.load("data/{}".format(img)), (416, 132))
@@ -201,17 +205,18 @@ class Game(pygame.sprite.Sprite):
 
     def render(self):
         global k, k1
-        self.rect.y += 2
+        self.rect.y += 2  # text moves down while y < 70
         if self.rect.y >= 70:
             k = False
 
 
-def end_game(r, scr, score):
+def end_game(r, scr, score):  # activates game over screen
     global do, k, W, H
     k = True
     do1 = True
     # g2 = pygame.sprite.Group()
     gg = pygame.transform.scale(pygame.image.load("data/game_over.png"), (165, 90))
+    # game over text appears
     while do1:
         scr.blit(gg, ((W - 165) // 2, (H - 90) // 2))
         for e in pygame.event.get():
@@ -224,6 +229,7 @@ def end_game(r, scr, score):
         pygame.display.flip()
     do1 = True
     if do:
+        # if user pressed "t" or "down" shows information, else quits
         while do1:
             scr.fill((0, 0, 0))
             scr.blit(gg, ((W - 165) // 2, 0))
@@ -234,8 +240,10 @@ def end_game(r, scr, score):
 
                 if e.type == pygame.KEYDOWN and e.key == pygame.K_SPACE:
                     do1 = False
+                # quits game over screen if user pressed "space"
             font = pygame.font.Font(None, 50)
             text = font.render("You {}".format(r), 1, (100, 255, 100))
+            # shows "you win" or "you lose"
             text_x = W // 2 - text.get_width() // 2
             text_y = H // 2 - text.get_height() // 2
             text_w = text.get_width()
@@ -243,8 +251,10 @@ def end_game(r, scr, score):
             screen.blit(text, (text_x, text_y))
             pygame.draw.rect(screen, (0, 255, 0), (text_x - 10, text_y - 10,
                                                    text_w + 20, text_h + 20), 1)
+            # draws green text border
             font = pygame.font.Font(None, 50)
             text = font.render("Your score {}".format(score), 1, (200, 255, 150))
+            # shows score
             text_x = W // 2 - text.get_width() // 2
             text_y = H // 2 + text.get_height() + 10
             text_w = text.get_width()
@@ -252,6 +262,7 @@ def end_game(r, scr, score):
             screen.blit(text, (text_x, text_y))
             pygame.draw.rect(screen, (0, 255, 0), (text_x - 10, text_y - 10,
                                                    text_w + 20, text_h + 20), 1)
+            # draws green text border
             pygame.display.flip()
 
 
@@ -268,6 +279,7 @@ def main():
     s = pygame.sprite.Group()
     tank1 = Tank(sprites_my, 92, 60, yel_up, "yellow", 2, 1, 3)
     tank1.spawn()
+    # creates my yellow tank
     score = 0
     tanks_killed = 0
     game_over = False
@@ -299,6 +311,7 @@ def main():
                 if three.rect.x < a[0] and three.rect.x + three.rect[2] > a[0] and three.rect.y < a[
                     1] and three.rect.y + three.rect[3] > a[1]:
                     our_level = 3
+                # plays the level that user clicked on
         if k:
             game.render()
         if k1:
@@ -306,6 +319,7 @@ def main():
             one.render()
             two.render()
             three.render()
+        # renders flying text
         g.draw(screen)
         s.draw(screen)
         if our_level != 0:
@@ -361,14 +375,14 @@ def main():
         while if_paused:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
-                    do = False;
-                    running = False;
+                    do = False
+                    running = False
                     if_paused = False
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     a = event.pos
                     if replay.rect.x < a[0] and replay.rect.x + replay.rect[2] > a[0] and replay.rect.y < a[
                         1] and replay.rect.y + replay.rect[3] > a[1]:
-                        running = False;
+                        running = False
                         if_paused = False
                     if pause.rect.x < a[0] and pause.rect.x + pause.rect[2] > a[0] and pause.rect.y < a[
                         1] and pause.rect.y + pause.rect[3] > a[1]:
