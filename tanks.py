@@ -30,6 +30,7 @@ class Tank(pygame.sprite.Sprite):
                 frame_location = (self.rect.w * i, self.rect.h * j)
                 self.frames.append(sheet.subsurface(pygame.Rect(
                     frame_location, self.rect.size)))
+        # divides the sheet into several rows and columns
 
     def update(self):
         if self.go:
@@ -108,7 +109,7 @@ class Tank(pygame.sprite.Sprite):
             self.rect.x = 188 + 16
 
 
-class Bullet(pygame.sprite.Sprite):
+class Bullet(pygame.sprite.Sprite): # a bullet
     def __init__(self, direction, x, y, group, group2):
         super().__init__(all_sprites)
         self.add(group)
@@ -157,7 +158,7 @@ class Gift(pygame.sprite.Sprite):
         pass
 
 
-class Border(pygame.sprite.Sprite):
+class Border(pygame.sprite.Sprite): # impassable wall
     def __init__(self, x1, y1, x2, y2):
         super().__init__(borders)
         self.image = pygame.transform.scale(pygame.image.load("images/border.png"), (x2, y2))
@@ -166,7 +167,7 @@ class Border(pygame.sprite.Sprite):
         self.rect.y = y1
 
 
-class Stage(pygame.sprite.Sprite):
+class Stage(pygame.sprite.Sprite): # flying up text
     def __init__(self, group, x, y, img, a, b):
         super().__init__(group)
         self.image = pygame.transform.scale(pygame.image.load("images/{}.png".format(img)), (a, b))
@@ -181,7 +182,7 @@ class Stage(pygame.sprite.Sprite):
             k1 = False
 
 
-class Wall(pygame.sprite.Sprite):
+class Wall(pygame.sprite.Sprite): # destroyable wall
     def __init__(self, group, x, y, img):
         super().__init__(all_sprites)
         self.add(group)
@@ -196,7 +197,7 @@ class Wall(pygame.sprite.Sprite):
         self.rect.y = 16 * y + 60
 
 
-class Game(pygame.sprite.Sprite):
+class Game(pygame.sprite.Sprite): # flying down text/textures
     def __init__(self, group, img):
         super().__init__(group)
         self.image = pygame.transform.scale(pygame.image.load("images/{}".format(img)), (416, 132))
@@ -211,7 +212,7 @@ class Game(pygame.sprite.Sprite):
             k = False
 
 
-def end_game(r, scr, score):
+def end_game(r, scr, score): # activates game over screen
     global do, k, W, H
     k = True
     do1 = True
