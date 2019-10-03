@@ -3,127 +3,135 @@ import time
 import random
 
 
-class Tank(pygame.sprite.Sprite):
+class Tank(pygame.sprite.Sprite):##танк
     def __init__(self, group, x, y, img, color, columns, rows, hp):
         super().__init__(all_sprites)
         self.add(group)
-        self.g = group
-        self.color = color
-        self.frames = []
-        self.bullets = pygame.sprite.Group()
-        self.max_bullets = 1
-        self.level = 1
-        self.hp = hp
+        self.group = group
+        self.color = color##цвет
+        self.frames = []##картинки
+        self.bullets = pygame.sprite.Group()##пули
+        self.max_bullets = 1##максимальное количество пуль от данного танка
+        self.level = 1##первоначальный уровень
+        self.hp = hp##количество жизней
         self.cut_sheet(img, columns, rows)
-        self.cur_frame = 0
-        self.image = self.frames[self.cur_frame]
-        self.rect = self.rect.move(x, y)
-        self.d = "up"
-        self.go = False
-        self.xm, self.ym = 0, 0
+        self.cur_frame = 0##инзначальное выбирается какой именно картинкой будет танк(изначально 0-вверх дуло направлено)
+        self.image = self.frames[self.cur_frame]##собственно присваевается именно нужная картинка
+        self.rect = self.rect.move(x, y)##первоначальный прямоугольник с координатами заданными
+        self.compas = "up"##первоначальное направление - вверх
+        self.go = False##можно ли идти вперед
+        self.x_speed, self.y_speed = 0, 0##первоначальные скорости по координатам
 
-    def cut_sheet(self, sheet, columns, rows):
-        self.rect = pygame.Rect(0, 0, sheet.get_width() // columns,
-                                sheet.get_height() // rows)
+    def cut_sheet(self, sheet, columns, rows):##разрезаем картинку по количеству столбоцв и строк
+        self.rect = pygame.Rect(0, 0, sheet.get_width() // columns, sheet.get_height() // rows)
         for j in range(rows):
             for i in range(columns):
                 frame_location = (self.rect.w * i, self.rect.h * j)
-                self.frames.append(sheet.subsurface(pygame.Rect(
-                    frame_location, self.rect.size)))
+                self.frames.append(sheet.subsurface(pygame.Rect(frame_location, self.rect.size)))
 
-    def update(self):
+    def update(self):##обновление
         if self.go:
-            self.rect.x += self.xm
-            self.rect.y += self.ym
+            self.rect.x += self.x_speed#добавляется скорость по х
+            self.rect.y += self.y_speed#добавляется скорость по у
             self.cur_frame = (self.cur_frame + 1) % len(self.frames)
-            self.image = self.frames[self.cur_frame]
+            self.image = self.frames[self.cur_frame]##меняется изображение если танк едет вперед
 
-    def direction(self, key):
+    def direction(self, key):##направление
         x, y = self.rect.x, self.rect.y
         img = pygame.transform.scale(
-            pygame.image.load("data/{}_tank_{}_level{}.png".format(self.color, key, self.level)),
+            pygame.image.load("images/{}_tank_{}_level{}.png".format(self.color, key, self.level)),
             (64, 30))
         self.cut_sheet(img, 2, 1)
         self.cur_frame = 0
         self.image = self.frames[self.cur_frame]
         self.rect = self.rect.move(x, y)
         self.frames = self.frames[-2:]
-        self.d = key
+        self.compas = key##меняем картинку там чтобы шины двигались все такое
 
     def move(self, g):
-        if self.hp > 0:
-            self.xm, self.ym = 0, 0
+        if self.hp > 0:##если еще живой
+            self.x_speed, self.y_speed = 0, 0##скорость по координатам х и у делаем 0 и 0
             if g == "up":
-                self.ym -= 8
+                self.y_speed -= 8##скорость по координате у делаем равной 8(дивжется вверх)
             if g == "down":
-                self.ym += 8
+                self.y_speed += 8##скорость по координате у делаем равной 8(дивжется вниз)
             if g == "right":
-                self.xm += 8
+                self.x_speed += 8##скорость по координате x делаем равной 8(дивжется вправо)
             if g == "left":
-                self.xm -= 8
-            self.rect.x += self.xm
-            self.rect.y += self.ym
+                self.x_speed -= 8##скорость по координате x делаем равной 8(дивжется влево)
+            self.rect.x += self.x_speed ##перемещаемся
+            self.rect.y += self.y_speed
             h = 0
-            if self.g == sprites_enemy:
+            if self.group == sprites_enemy:
                 for sp in sprites_enemy:
-                    k = pygame.sprite.spritecollideany(sp, self.g)
+                    k = pygame.sprite.spritecollideany(sp, self.group)
                     if k and k != sp:
                         h += 1
-            if pygame.sprite.groupcollide(self.g, sprites_barrier, False, False) or pygame.sprite.groupcollide(
-                    self.g, borders, False, False) or (
-                                self.g != sprites_my and pygame.sprite.groupcollide(self.g, sprites_my, False,
+            if pygame.sprite.groupcollide(self.group, sprites_barrier, False, False) or pygame.sprite.groupcollide(
+                    self.group, borders, False, False) or (
+                                self.group != sprites_my and pygame.sprite.groupcollide(self.group, sprites_my, False,
                                                                                     False) or h) or (
-                            self.g != sprites_enemy and pygame.sprite.groupcollide(self.g, sprites_enemy, False,
+                            self.group != sprites_enemy and pygame.sprite.groupcollide(self.group, sprites_enemy, False,
                                                                                    False)):
-                self.rect.x -= self.xm
-                self.rect.y -= self.ym
+                ##проверка можно ли идти вперед
+                print ('USA', self.group)
+                self.rect.x -= self.x_speed
+                self.rect.y -= self.y_speed
                 self.go = False
-                self.xm, self.ym = 0, 0
+                self.x_speed, self.y_speed = 0, 0
             else:
                 self.go = True
-            self.rect.x -= self.xm
-            self.rect.y -= self.ym
+            self.rect.x -= self.x_speed
+            self.rect.y -= self.y_speed
 
-    def shoot(self, group):
-        if self.d == "up":
-            x1, y1 = self.rect.x + 13, self.rect.y + 2
-        if self.d == "right":
-            x1, y1 = self.rect.x + 28, self.rect.y + 13
-        if self.d == 'left':
-            x1, y1 = self.rect.x + 2, self.rect.y + 13
-        if self.d == "down":
-            x1, y1 = self.rect.x + 13, self.rect.y + 28
-        Bullet(self.d, x1, y1, group, self.bullets)
+    def shoot(self, group):##выстрел
+        if self.compas == "up":
+            x_bullet, y_bullet = self.rect.x + 13, self.rect.y + 2##первоначальные координаты пули
+        if self.compas == "right":
+            x_bullet, y_bullet = self.rect.x + 28, self.rect.y + 13
+        if self.compas == 'left':
+            x_bullet, y_bullet = self.rect.x + 2, self.rect.y + 13
+        if self.compas == "down":
+            x_bullet, y_bullet = self.rect.x + 13, self.rect.y + 28
+        Bullet(self.compas, x_bullet, y_bullet, group, self.bullets)
 
-    def level_up(self):
+    def level_up(self):##повышение уровня
         self.level += 1
 
-    def spawn(self):
-        if self.g == sprites_my:
+    def spawn(self):##появление
+        if self.group == sprites_my:
+            
             self.rect.y = 444
             self.rect.x = 188 + 16
+    def spawn_1(self):##появление
+        if self.group == sprites_my:
+            
+            self.rect.y = 444
+            self.rect.x = 188 + 16 + 50
+            
+                
 
 
-class Bullet(pygame.sprite.Sprite):
-    def __init__(self, d, x, y, group, group2):
+class Bullet(pygame.sprite.Sprite):##пуля
+    def __init__(self, compas, x, y, group, group2):
         super().__init__(all_sprites)
         self.add(group)
         self.add(group2)
-        self.d = d
-        self.image = pygame.transform.scale(pygame.image.load("data/bullet.png"), (4, 4))
+        self.compas = compas
+        self.image = pygame.transform.scale(pygame.image.load("images/bullet.png"), (4, 4))##присвоение картинки и уменьшение ее до 4*4 пикселя
         self.rect = self.image.get_rect()
         self.rect.x = x
         self.rect.y = y
 
-    def move(self):
+    def move(self):##движение 
         x, y = 0, 0
-        if self.d == "up":
+        if self.compas == "up":##вверх
             y -= 6
-        if self.d == "down":
+        if self.compas == "down":##вниз
             y += 6
-        if self.d == "right":
+        if self.compas == "right":##вправо
             x += 6
-        if self.d == "left":
+        if self.compas == "left":##влево
             x -= 6
         self.rect.x += x
         self.rect.y += y
@@ -132,11 +140,11 @@ class Bullet(pygame.sprite.Sprite):
         self.move()
 
 
-class Gift(pygame.sprite.Sprite):
+class Gift(pygame.sprite.Sprite):##подарок,который не работает так что разбираться в нем я конечно же не буду
     def __init__(self):
         super().__init__(all_sprites)
         self.add(gifts)
-        self.image = pygame.transform.scale(pygame.image.load("data/star.png"), (32, 32))
+        self.image = pygame.transform.scale(pygame.image.load("images/star.png"), (32, 32))
         self.rect = self.image.get_rect()
         x, y = 0, 0
         for i in range(13):
@@ -155,7 +163,7 @@ class Gift(pygame.sprite.Sprite):
 class Border(pygame.sprite.Sprite):
     def __init__(self, x1, y1, x2, y2):
         super().__init__(borders)
-        self.image = pygame.transform.scale(pygame.image.load("data/border.png"), (x2, y2))
+        self.image = pygame.transform.scale(pygame.image.load("images/border.png"), (x2, y2))##вот такой серенький фон сзади
         self.rect = self.image.get_rect()
         self.rect.x = x1
         self.rect.y = y1
@@ -164,7 +172,7 @@ class Border(pygame.sprite.Sprite):
 class Stage(pygame.sprite.Sprite):
     def __init__(self, group, x, y, img, a, b):
         super().__init__(group)
-        self.image = pygame.transform.scale(pygame.image.load("data/{}.png".format(img)), (a, b))
+        self.image = pygame.transform.scale(pygame.image.load("images/{}.png".format(img)), (a, b))
         self.rect = self.image.get_rect()
         self.rect.x = x
         self.rect.y = y
@@ -185,7 +193,7 @@ class Wall(pygame.sprite.Sprite):
             self.add(sprites_wall)
         if img == "grass":
             self.add(sprites_grass)
-        self.image = pygame.transform.scale(pygame.image.load("data/{}.png".format(img)), (16, 16))
+        self.image = pygame.transform.scale(pygame.image.load("images/{}.png".format(img)), (16, 16))
         self.rect = self.image.get_rect()
         self.rect.x = 16 * x + 60
         self.rect.y = 16 * y + 60
@@ -194,7 +202,7 @@ class Wall(pygame.sprite.Sprite):
 class Game(pygame.sprite.Sprite):
     def __init__(self, group, img):
         super().__init__(group)
-        self.image = pygame.transform.scale(pygame.image.load("data/{}".format(img)), (416, 132))
+        self.image = pygame.transform.scale(pygame.image.load("images/{}".format(img)), (416, 132))
         self.rect = self.image.get_rect()
         self.rect.x = 60
         self.rect.y = -150
@@ -211,7 +219,7 @@ def end_game(r, scr, score):
     k = True
     do1 = True
     # g2 = pygame.sprite.Group()
-    gg = pygame.transform.scale(pygame.image.load("data/game_over.png"), (165, 90))
+    gg = pygame.transform.scale(pygame.image.load("images/game_over.png"), (165, 90))
     while do1:
         scr.blit(gg, ((W - 165) // 2, (H - 90) // 2))
         for e in pygame.event.get():
@@ -224,7 +232,8 @@ def end_game(r, scr, score):
         pygame.display.flip()
     do1 = True
     if do:
-        while do1:
+        while do1: ##никогда не случится так что смысл рассмаривать
+          
             scr.fill((0, 0, 0))
             scr.blit(gg, ((W - 165) // 2, 0))
             for e in pygame.event.get():
@@ -266,15 +275,17 @@ def main():
     g = pygame.sprite.Group()
     game = Game(g, "battle_city.jpg")
     s = pygame.sprite.Group()
-    tank1 = Tank(sprites_my, 92, 60, yel_up, "yellow", 2, 1, 3)
-    tank1.spawn()
+    tank1 = Tank(sprites_my, 92, 60, yel_up, "yellow", 2, 1, 3)##это наш танк
+    #tank_beta = Tank(sprites_my, 0, 0, yel_up, "yellow", 2, 1, 3)##это second танк
+    tank1.spawn()##заспавнили
+    #tank_beta.spawn_1()
     score = 0
     tanks_killed = 0
     game_over = False
-    stage = Stage(s, (W - 205) // 2, 550, 'stage', 205, 40)
-    one = Stage(s, (W - 40) // 4, 600, 'one', 40, 45)
-    two = Stage(s, (W - 45) // 4 * 2, 600, 'two', 45, 45)
-    three = Stage(s, (W - 45) // 4 * 3, 600, 'three', 40, 45)
+    stage = Stage(s, (W - 205) // 2, 550, 'stage', 205, 40)##первоначальная кнопка выбора уровня
+    one = Stage(s, (W - 40) // 4, 600, 'one', 40, 45)## первый уровень
+    two = Stage(s, (W - 45) // 4 * 2, 600, 'two', 45, 45)## второй уровень
+    three = Stage(s, (W - 45) // 4 * 3, 600, 'three', 40, 45)## третий уровень
     our_level = 0
     borders = pygame.sprite.Group()
     buttons = pygame.sprite.Group()
@@ -289,15 +300,15 @@ def main():
                 do = False
                 running = False
             if event.type == pygame.MOUSEBUTTONDOWN:
-                a = event.pos
+                a = event.pos ##определение куда именно попал щелчок
                 if one.rect.x < a[0] and one.rect.x + one.rect[2] > a[0] and one.rect.y < a[1] and one.rect.y + \
-                        one.rect[3] > a[1]:
+                        one.rect[3] > a[1]:## если попал на первую кнопку
                     our_level = 1
                 if two.rect.x < a[0] and two.rect.x + two.rect[2] > a[0] and two.rect.y < a[1] and two.rect.y + \
-                        two.rect[3] > a[1]:
+                        two.rect[3] > a[1]:##если попал на вторую
                     our_level = 2
                 if three.rect.x < a[0] and three.rect.x + three.rect[2] > a[0] and three.rect.y < a[
-                    1] and three.rect.y + three.rect[3] > a[1]:
+                    1] and three.rect.y + three.rect[3] > a[1]: ## если на третью
                     our_level = 3
         if k:
             game.render()
@@ -314,7 +325,7 @@ def main():
 
     if do:
         Stage(the_flag, 12 * 16 + 60, 24 * 16 + 60, 'flag', 32, 32)
-        board = open("board{}.txt".format(our_level)).read().split('\n')
+        board = open("board{}.txt".format(our_level)).read().split('\n')## открываем тот текстовый фойл, в котором хранится информация о нужном нам поле и превращаем его в двумерный массив
         walls = []
         sprites_wall = pygame.sprite.Group()
         sprites_enemy = pygame.sprite.Group()
@@ -322,8 +333,8 @@ def main():
         for i in range(26):
             for j in range(26):
                 if board[i][j] != '0':
-                    walls.append(Wall(sprites_barrier, j, i, images[board[i][j]]))
-        replay = Stage(buttons, W - 200, H - 50, 'restart', 149, 44)
+                    walls.append(Wall(sprites_barrier, j, i, images[board[i][j]]))##добавляем тот объект, который указан по уровню
+        replay = Stage(buttons, W - 200, H - 50, 'restart', 149, 44)##добавляем кнопки
         pause = Stage(buttons, W - 360, H - 50, 'pause', 151, 44)
         replay.add(all_sprites)
         pause.add(all_sprites)
@@ -333,53 +344,53 @@ def main():
         tank1.go = False
         screen.fill((0, 0, 0))
         for event in pygame.event.get():
-            if event.type == pygame.QUIT:
+            if event.type == pygame.QUIT:##если нажимаем на крестик то выходим
                 do = False
                 running = False
-            if event.type == pygame.MOUSEBUTTONDOWN:
-                a = event.pos
+            if event.type == pygame.MOUSEBUTTONDOWN:##если нажимаем на кнопку мышки
+                a = event.pos##считываем позицию куда нажили
                 if replay.rect.x < a[0] and replay.rect.x + replay.rect[2] > a[0] and replay.rect.y < a[
                     1] and replay.rect.y + replay.rect[3] > a[1]:
-                    running = False
+                    running = False ## начинаем все с самого начала, даже выбираем заново уровень
                 if pause.rect.x < a[0] and pause.rect.x + pause.rect[2] > a[0] and pause.rect.y < a[
                     1] and pause.rect.y + pause.rect[3] > a[1]:
-                    pause.image = pygame.transform.scale(pygame.image.load("data/{}.png".format('play')), (92, 44))
+                    pause.image = pygame.transform.scale(pygame.image.load("images/{}.png".format('play')), (92, 44))
                     pygame.display.flip()
-                    if_paused = True
-            if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_SPACE and len(tank1.bullets) < tank1.max_bullets:
-                    tank1.shoot(sprites_bullet)
-                if event.key == pygame.K_UP:
-                    tank1.direction("up")
-                elif event.key == pygame.K_DOWN:
-                    tank1.direction("down")
-                elif event.key == pygame.K_RIGHT:
-                    tank1.direction("right")
-                elif event.key == pygame.K_LEFT:
-                    tank1.direction("left")
+                    if_paused = True ## ставим на паузу
+            if event.type == pygame.KEYDOWN:##если нажимаем на любую кнопку
+                if event.key == pygame.K_SPACE and len(tank1.bullets) < tank1.max_bullets:##если нажали на пробел и число пуль не превысило максимум
+                    tank1.shoot(sprites_bullet)## создаем пулю
+                if event.key == pygame.K_UP:##если нажали вверх
+                    tank1.direction("up")##меняем направление на вверх
+                elif event.key == pygame.K_DOWN:##если нажали вниз
+                    tank1.direction("down")##меняем направление на вниз
+                elif event.key == pygame.K_RIGHT:##если нажали вправо
+                    tank1.direction("right")##меняем направление на вправо
+                elif event.key == pygame.K_LEFT:##если нажали влево
+                    tank1.direction("left")##меняем направление на влево
 
-        while if_paused:
+        while if_paused:##пока находимся в состоянии паузы
             for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    do = False;
+                if event.type == pygame.QUIT:##если выходим
+                    do = False; 
                     running = False;
                     if_paused = False
-                if event.type == pygame.MOUSEBUTTONDOWN:
-                    a = event.pos
+                if event.type == pygame.MOUSEBUTTONDOWN:##если нажимаем на кнопку мышки
+                    a = event.pos## считываем ее позицию
                     if replay.rect.x < a[0] and replay.rect.x + replay.rect[2] > a[0] and replay.rect.y < a[
                         1] and replay.rect.y + replay.rect[3] > a[1]:
-                        running = False;
+                        running = False##начинаем сначала
                         if_paused = False
                     if pause.rect.x < a[0] and pause.rect.x + pause.rect[2] > a[0] and pause.rect.y < a[
                         1] and pause.rect.y + pause.rect[3] > a[1]:
-                        pause.image = pygame.transform.scale(pygame.image.load("data/{}.png".format('pause')),
+                        pause.image = pygame.transform.scale(pygame.image.load("images/{}.png".format('pause')),
                                                              (151, 44))
                         pygame.display.flip()
-                        if_paused = False
+                        if_paused = False##снимаем с паузы
             borders.draw(screen)
             all_sprites.draw(screen)
             pygame.display.flip()
-        keys = pygame.key.get_pressed()
+        keys = pygame.key.get_pressed()##читываем куда мы нажимаем и соответсвенно двигаемся в соответсвующем направлении
         if keys[pygame.K_DOWN]:
             tank1.direction("down")
             tank1.move('down')
@@ -392,15 +403,15 @@ def main():
         elif keys[pygame.K_LEFT]:
             tank1.direction("left")
             tank1.move('left')
-        if len(sprites_enemy) < 4:
+        if len(sprites_enemy) < 4:## если вражеских танчиков меньше 4 то генерируем новый
             h = random.randint(0, 30)
-            col = ["gray", "pink"][random.randint(0, 1)]
-            hp = {"gray": 1, "pink": 2}[col]
-            if h == 7:
-                img = pygame.transform.scale(pygame.image.load("data/{}_tank_up_level1.png".format(col)), (64, 30))
+            col = ["gray", "pink"][random.randint(0, 1)]##выбираем для него цвет
+            hp = {"gray": 1, "pink": 2}[col]## и соотв с цевтом кол-во жизней
+            if h == 7:##если случайное число это 7 то генится серый танк с одной жизнью
+                img = pygame.transform.scale(pygame.image.load("images/{}_tank_up_level1.png".format(col)), (64, 30))
                 sp = Tank(sprites_enemy, 60, 60, img, col, 2, 1, hp)
-            if h == 8:
-                img = pygame.transform.scale(pygame.image.load("data/{}_tank_up_level1.png".format(col)),
+            if h == 8:##если случайное число это 8 то генится розовый танк с 2 жизнями
+                img = pygame.transform.scale(pygame.image.load("images/{}_tank_up_level1.png".format(col)),
                                              (64, 30))
                 sp = Tank(sprites_enemy, 442, 60, img, col, 2, 1, hp)
             coll = 0
@@ -410,14 +421,14 @@ def main():
                 if coll > 1:
                     sp.kill()
         for t in sprites_enemy:
-            if pygame.sprite.spritecollide(t, sprites_bullet, True):
+            if pygame.sprite.spritecollide(t, sprites_bullet, True):##если пулька попала во вражеский танк, то минус жизнь
                 t.hp -= 1
                 if t.hp == 1:
                     t.color = "gray"
                     score += 150
-                    t.direction(t.d)
+                    t.direction(t.compas)
             if t.hp == 0:
-                t.image = pygame.transform.scale(pygame.image.load("data/{}.png".format('boom1')), (32, 32))
+                t.image = pygame.transform.scale(pygame.image.load("images/{}.png".format('boom1')), (32, 32))##если застрелили, то происхожит взрыв1
                 sprites_enemy.draw(screen)
                 tanks_killed += 1
                 score += 100
@@ -425,24 +436,24 @@ def main():
             if t.hp <= 0:
                 t.hp -= 1
             if t.hp == -2:
-                t.image = pygame.transform.scale(pygame.image.load("data/{}.png".format('boom')), (32, 32))
+                t.image = pygame.transform.scale(pygame.image.load("images/{}.png".format('boom')), (32, 32))##взрыв2
                 sprites_enemy.draw(screen)
             if t.hp == -3:
-                t.image = pygame.transform.scale(pygame.image.load("data/{}.png".format('boom3')), (32, 32))
+                t.image = pygame.transform.scale(pygame.image.load("images/{}.png".format('boom3')), (32, 32))##взрыв3
                 sprites_enemy.draw(screen)
-                t.kill()
-            if not t.go:
+                t.kill()##наконец-то убиваем танк
+            if not t.go:##если не можем идти вперед, меняем направление
                 d = ["up", "down", "left", "right"][random.randint(0, 3)]
                 t.direction(d)
                 t.move(d)
-            else:
-                t.move(t.d)
-            if len(t.bullets) < t.max_bullets:
+            else:##идем вперед
+                t.move(t.compas)
+            if len(t.bullets) < t.max_bullets:##если они выпустили меньше чем максимальное число пуль, то кто-нибудь стреляет и то, не факт
                 sh = random.randint(0, 20)
                 if sh == 3:
                     t.shoot(sprites_en_bullet)
 
-        if tanks_killed == 16 and not gift:
+        if tanks_killed == 16 and not gift:##сесли убито 16 танков и еще не выдли подарок
             x, y = 0, 0
             while not gift:
                 gift = Gift()
@@ -454,22 +465,23 @@ def main():
                 if pygame.sprite.groupcollide(gifts, all_sprites, False, False):
                     gift.kill()
             print(x, y)
-
+        ##если наша пуля попала куда-то:
         pygame.sprite.groupcollide(sprites_bullet, sprites_wall, True, True)
         pygame.sprite.groupcollide(sprites_bullet, borders, True, False)
         pygame.sprite.groupcollide(sprites_bullet, sprites_grass, True, False)
+        ##если вражеская пуля попала куда-то
         pygame.sprite.groupcollide(sprites_en_bullet, sprites_wall, True, True)
         pygame.sprite.groupcollide(sprites_en_bullet, borders, True, False)
         pygame.sprite.groupcollide(sprites_en_bullet, sprites_grass, True, False)
-        if pygame.sprite.groupcollide(sprites_en_bullet, sprites_my, True, False):
+        if pygame.sprite.groupcollide(sprites_en_bullet, sprites_my, True, False):##если вражеская пуля попала в меня то минус жизнь и к началу позиция танка
             tank1.hp -= 1
             tank1.spawn()
         if pygame.sprite.groupcollide(sprites_en_bullet, the_flag, True, False) or pygame.sprite.groupcollide(
-                sprites_bullet, the_flag, True, False):
+                sprites_bullet, the_flag, True, False):##если кто-то попал во флаг, то конец
             for i in the_flag:
-                i.image = pygame.transform.scale(pygame.image.load("data/{}.png".format('dead_flag')), (32, 32))
+                i.image = pygame.transform.scale(pygame.image.load("images/{}.png".format('dead_flag')), (32, 32))
                 pygame.display.flip()
-                # time.sleep(5)
+                
                 game_over = "lose"
                 running = False
         if tank1.hp <= 0:
@@ -519,7 +531,7 @@ sprites_enemy = pygame.sprite.Group()
 gifts = pygame.sprite.Group()
 mini_tanks = pygame.sprite.Group()
 the_flag = pygame.sprite.Group()
-yel_up = pygame.transform.scale(pygame.image.load("data/yellow_tank_up_level1.png"), (64, 30))
+yel_up = pygame.transform.scale(pygame.image.load("images/yellow_tank_up_level1.png"), (64, 30))
 clock = pygame.time.Clock()
 while do:
     main()
