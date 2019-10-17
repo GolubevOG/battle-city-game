@@ -1,26 +1,55 @@
+# -*- coding:utf-8 -*-
 import pygame
 import time
 import random
 
 
 class Tank(pygame.sprite.Sprite):##танк
-    def __init__(self, group, x, y, img, color, columns, rows, hp):
+    def __init__(self, controls=None):
         super().__init__(all_sprites)
-        self.add(group)
-        self.group = group
-        self.color = color##цвет
+        if not controls:##если не назначены кнопки (т.е. если танк - враг)
+            self.group = sprites_enemy
+            self.x = random.choice((60, 442))
+            self.y = 60
+            self.hp = random.randint(1, 2)
+            self.color = ('', 'gray', 'pink')[self.hp]
+        else:##если этот танк - танк игрока
+            self.group = sprites_my
+            if len(sprites_my) == 0:
+                self.x = 92
+                self.spawn_x = 204
+                self.color = 'yellow'
+            else:
+                self.x = 92
+                self.spawn_x = 304
+                self.color = 'green'
+            self.y = 60
+            self.spawn_y = 444
+            self.hp = 3
+            self.controls = {
+                'up': controls[0],
+                'down': controls[1],
+                'left': controls[2],
+                'right': controls[3],
+                'shoot': controls[4]
+            }
+        self.add(self.group)
+        self.img = pygame.transform.scale(
+                                          pygame.image.load("images/{}_tank_up_level1.png".format(self.color)),
+                                          (64, 30)
+        )
         self.frames = []##картинки
         self.bullets = pygame.sprite.Group()##пули
         self.max_bullets = 1##максимальное количество пуль от данного танка
         self.level = 1##первоначальный уровень
-        self.hp = hp##количество жизней
-        self.cut_sheet(img, columns, rows)
-        self.cur_frame = 0##инзначальное выбирается какой именно картинкой будет танк(изначально 0-вверх дуло направлено)
+        self.cut_sheet(self.img, 2, 1)
+        self.cur_frame = 0##изначальное выбирается какой именно картинкой будет танк(изначально 0-вверх дуло направлено)
         self.image = self.frames[self.cur_frame]##собственно присваевается именно нужная картинка
-        self.rect = self.rect.move(x, y)##первоначальный прямоугольник с координатами заданными
+        self.rect = self.rect.move(self.x, self.y)##первоначальный прямоугольник с координатами заданными
         self.compas = "up"##первоначальное направление - вверх
         self.go = False##можно ли идти вперед
         self.x_speed, self.y_speed = 0, 0##первоначальные скорости по координатам
+
 
     def cut_sheet(self, sheet, columns, rows):##разрезаем картинку по количеству столбоцв и строк
         self.rect = pygame.Rect(0, 0, sheet.get_width() // columns, sheet.get_height() // rows)
@@ -74,7 +103,7 @@ class Tank(pygame.sprite.Sprite):##танк
                             self.group != sprites_enemy and pygame.sprite.groupcollide(self.group, sprites_enemy, False,
                                                                                    False)):
                 ##проверка можно ли идти вперед
-                print ('USA', self.group)
+                #print('USA', self.group)
                 self.rect.x -= self.x_speed
                 self.rect.y -= self.y_speed
                 self.go = False
@@ -99,17 +128,13 @@ class Tank(pygame.sprite.Sprite):##танк
         self.level += 1
 
     def spawn(self):##появление
-        if self.group == sprites_my:
-            
-            self.rect.y = 444
-            self.rect.x = 188 + 16
+        self.rect.y = self.spawn_y
+        self.rect.x = self.spawn_x
+    '''
     def spawn_1(self):##появление
-        if self.group == sprites_my:
-            
-            self.rect.y = 444
-            self.rect.x = 188 + 16 + 50
-            
-                
+        self.rect.y = 444
+        self.rect.x = 188 + 16 + 50
+    '''
 
 
 class Bullet(pygame.sprite.Sprite):##пуля
@@ -140,7 +165,7 @@ class Bullet(pygame.sprite.Sprite):##пуля
         self.move()
 
 
-class Gift(pygame.sprite.Sprite):##подарок,который не работает так что разбираться в нем я конечно же не буду
+class Gift(pygame.sprite.Sprite):##подарок, который не работает, так что разбираться в нем я, конечно же, не буду
     def __init__(self):
         super().__init__(all_sprites)
         self.add(gifts)
@@ -230,38 +255,6 @@ def end_game(r, scr, score):
                 do1 = False
         # g2.draw(scr)
         pygame.display.flip()
-    do1 = True
-    if do:
-        while do1: ##никогда не случится так что смысл рассмаривать
-          
-            scr.fill((0, 0, 0))
-            scr.blit(gg, ((W - 165) // 2, 0))
-            for e in pygame.event.get():
-                if e.type == pygame.QUIT:
-                    do1 = False
-                    do = False
-
-                if e.type == pygame.KEYDOWN and e.key == pygame.K_SPACE:
-                    do1 = False
-            font = pygame.font.Font(None, 50)
-            text = font.render("You {}".format(r), 1, (100, 255, 100))
-            text_x = W // 2 - text.get_width() // 2
-            text_y = H // 2 - text.get_height() // 2
-            text_w = text.get_width()
-            text_h = text.get_height()
-            screen.blit(text, (text_x, text_y))
-            pygame.draw.rect(screen, (0, 255, 0), (text_x - 10, text_y - 10,
-                                                   text_w + 20, text_h + 20), 1)
-            font = pygame.font.Font(None, 50)
-            text = font.render("Your score {}".format(score), 1, (200, 255, 150))
-            text_x = W // 2 - text.get_width() // 2
-            text_y = H // 2 + text.get_height() + 10
-            text_w = text.get_width()
-            text_h = text.get_height()
-            screen.blit(text, (text_x, text_y))
-            pygame.draw.rect(screen, (0, 255, 0), (text_x - 10, text_y - 10,
-                                                   text_w + 20, text_h + 20), 1)
-            pygame.display.flip()
 
 
 def main():
@@ -275,9 +268,11 @@ def main():
     g = pygame.sprite.Group()
     game = Game(g, "battle_city.jpg")
     s = pygame.sprite.Group()
-    tank1 = Tank(sprites_my, 92, 60, yel_up, "yellow", 2, 1, 3)##это наш танк
+    tank1 = Tank([pygame.K_UP, pygame.K_DOWN, pygame.K_LEFT, pygame.K_RIGHT, pygame.K_SPACE])##это наш танк
     #tank_beta = Tank(sprites_my, 0, 0, yel_up, "yellow", 2, 1, 3)##это second танк
     tank1.spawn()##заспавнили
+    tank2 = Tank([pygame.K_w, pygame.K_s, pygame.K_a, pygame.K_d, pygame.K_RETURN])
+    tank2.spawn()
     #tank_beta.spawn_1()
     score = 0
     tanks_killed = 0
@@ -296,7 +291,7 @@ def main():
     while running:
         pygame.display.flip()
         for event in pygame.event.get():
-            if event.type == pygame.QUIT:
+            if event.type == pygame.QUIT or (event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE):
                 do = False
                 running = False
             if event.type == pygame.MOUSEBUTTONDOWN:
@@ -339,12 +334,14 @@ def main():
         replay.add(all_sprites)
         pause.add(all_sprites)
         running = True
+        gift = None
     screen.fill((0, 0, 0))
     while running:
         tank1.go = False
+        tank2.go = False ##малююююююююсенькая незаметная строчка, отвечающая за то, чтобы танк не уезжал за пределы экрана, когда не надо
         screen.fill((0, 0, 0))
         for event in pygame.event.get():
-            if event.type == pygame.QUIT:##если нажимаем на крестик то выходим
+            if event.type == pygame.QUIT or (event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE):##если нажимаем на крестик то выходим
                 do = False
                 running = False
             if event.type == pygame.MOUSEBUTTONDOWN:##если нажимаем на кнопку мышки
@@ -357,6 +354,7 @@ def main():
                     pause.image = pygame.transform.scale(pygame.image.load("images/{}.png".format('play')), (92, 44))
                     pygame.display.flip()
                     if_paused = True ## ставим на паузу
+            '''
             if event.type == pygame.KEYDOWN:##если нажимаем на любую кнопку
                 if event.key == pygame.K_SPACE and len(tank1.bullets) < tank1.max_bullets:##если нажали на пробел и число пуль не превысило максимум
                     tank1.shoot(sprites_bullet)## создаем пулю
@@ -364,16 +362,26 @@ def main():
                     tank1.direction("up")##меняем направление на вверх
                 elif event.key == pygame.K_DOWN:##если нажали вниз
                     tank1.direction("down")##меняем направление на вниз
-                elif event.key == pygame.K_RIGHT:##если нажали вправо
-                    tank1.direction("right")##меняем направление на вправо
                 elif event.key == pygame.K_LEFT:##если нажали влево
                     tank1.direction("left")##меняем направление на влево
+                elif event.key == pygame.K_RIGHT:##если нажали вправо
+                    tank1.direction("right")##меняем направление на вправо
+
+                elif event.key == tank2.controls['up']:
+                    tank2.direction('up')
+                elif event.key == tank2.controls['down']:
+                    tank2.direction('down')
+                elif event.key == tank2.controls['left']:
+                    tank2.direction('left')
+                elif event.key == tank2.controls['right']:
+                    tank2.direction('right')
+            '''
 
         while if_paused:##пока находимся в состоянии паузы
             for event in pygame.event.get():
-                if event.type == pygame.QUIT:##если выходим
-                    do = False; 
-                    running = False;
+                if event.type == pygame.QUIT or (event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE):##если выходим
+                    do = False
+                    running = False
                     if_paused = False
                 if event.type == pygame.MOUSEBUTTONDOWN:##если нажимаем на кнопку мышки
                     a = event.pos## считываем ее позицию
@@ -390,30 +398,24 @@ def main():
             borders.draw(screen)
             all_sprites.draw(screen)
             pygame.display.flip()
+
         keys = pygame.key.get_pressed()##читываем куда мы нажимаем и соответсвенно двигаемся в соответсвующем направлении
-        if keys[pygame.K_DOWN]:
-            tank1.direction("down")
-            tank1.move('down')
-        elif keys[pygame.K_UP]:
-            tank1.direction("up")
-            tank1.move('up')
-        elif keys[pygame.K_RIGHT]:
-            tank1.direction("right")
-            tank1.move('right')
-        elif keys[pygame.K_LEFT]:
-            tank1.direction("left")
-            tank1.move('left')
+        for pressed_direction in ['up', 'down', 'left', 'right']:
+            if keys[tank1.controls[pressed_direction]]:
+                tank1.direction(pressed_direction)
+                tank1.move(pressed_direction)
+            if keys[tank2.controls[pressed_direction]]:
+                tank2.direction(pressed_direction)
+                tank2.move(pressed_direction)
+        if keys[tank1.controls['shoot']] and len(tank1.bullets) < tank1.max_bullets:
+            tank1.shoot(sprites_bullet)
+        if keys[tank2.controls['shoot']] and len(tank2.bullets) < tank2.max_bullets:
+            tank2.shoot(sprites_bullet)
+        
         if len(sprites_enemy) < 4:## если вражеских танчиков меньше 4 то генерируем новый
             h = random.randint(0, 30)
-            col = ["gray", "pink"][random.randint(0, 1)]##выбираем для него цвет
-            hp = {"gray": 1, "pink": 2}[col]## и соотв с цевтом кол-во жизней
-            if h == 7:##если случайное число это 7 то генится серый танк с одной жизнью
-                img = pygame.transform.scale(pygame.image.load("images/{}_tank_up_level1.png".format(col)), (64, 30))
-                sp = Tank(sprites_enemy, 60, 60, img, col, 2, 1, hp)
-            if h == 8:##если случайное число это 8 то генится розовый танк с 2 жизнями
-                img = pygame.transform.scale(pygame.image.load("images/{}_tank_up_level1.png".format(col)),
-                                             (64, 30))
-                sp = Tank(sprites_enemy, 442, 60, img, col, 2, 1, hp)
+            if h == 7 or h == 8:##если случайное число это 7 или 8, то появляется танк
+                sp = Tank()
             coll = 0
             for t in sprites_enemy:
                 if pygame.sprite.collide_rect(t, sp):
@@ -474,8 +476,10 @@ def main():
         pygame.sprite.groupcollide(sprites_en_bullet, borders, True, False)
         pygame.sprite.groupcollide(sprites_en_bullet, sprites_grass, True, False)
         if pygame.sprite.groupcollide(sprites_en_bullet, sprites_my, True, False):##если вражеская пуля попала в меня то минус жизнь и к началу позиция танка
-            tank1.hp -= 1
+            tank1.hp -= 0.5
             tank1.spawn()
+            tank2.hp -= 0.5
+            tank2.spawn()
         if pygame.sprite.groupcollide(sprites_en_bullet, the_flag, True, False) or pygame.sprite.groupcollide(
                 sprites_bullet, the_flag, True, False):##если кто-то попал во флаг, то конец
             for i in the_flag:
@@ -507,7 +511,7 @@ def main():
     sprites_grass.empty()
 
     sprites_enemy.empty()
-    sprites_my.empty()
+    tank1.group.empty()
     mini_tanks.empty()
     sprites_bullet.empty()
     sprites_en_bullet.empty()
@@ -531,7 +535,6 @@ sprites_enemy = pygame.sprite.Group()
 gifts = pygame.sprite.Group()
 mini_tanks = pygame.sprite.Group()
 the_flag = pygame.sprite.Group()
-yel_up = pygame.transform.scale(pygame.image.load("images/yellow_tank_up_level1.png"), (64, 30))
 clock = pygame.time.Clock()
 while do:
     main()
